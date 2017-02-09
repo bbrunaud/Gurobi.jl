@@ -99,7 +99,7 @@ function add_genconstrIndicator!(model::Model, binvar::Cint, binval::Cint, inds:
         Cchar,        # sense
         Float64       # rhs
         ),
-        model, C_NULL, binvar, binval, length(inds), inds - 1, coeffs, sense, rhs)
+        model, C_NULL, binvar-1, binval, length(inds), inds - 1, coeffs, sense, rhs)
     if ret != 0
         throw(GurobiError(model.env, ret))
     end

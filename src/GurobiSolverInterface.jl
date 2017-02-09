@@ -192,6 +192,7 @@ function addvar!(m::GurobiMathProgModel, l, u, objcoef)
     push!(m.obj, objcoef)
     add_var!(m.inner, 0, Integer[], Float64[], float(objcoef), float(l), float(u), GRB_CONTINUOUS)
 end
+
 function addconstr!(m::GurobiMathProgModel, varidx, coef, lb, ub)
     if m.last_op_type == :Var
         updatemodel!(m)
@@ -206,6 +207,26 @@ function addconstr!(m::GurobiMathProgModel, varidx, coef, lb, ub)
     elseif lb == ub
         # == constraint
         add_constr!(m.inner, varidx, coef, '=', lb)
+    else
+        # Range constraint
+        error("Adding range constraints not supported yet.")
+    end
+end
+
+function addindconstr!(m::GurobiMathProgModel, binvar, binval, varidx, coef, lb, ub)
+    if m.last_op_type == :Var
+        updatemodel!(m)
+        m.last_op_type = :Con
+    end
+    if lb == -Inf
+        # <= constraint
+        add_genconstrIndicator!(m.inner, binvar, binval, varidx, coef, '<', ub)
+    elseif ub == +Inf
+        # >= constraint
+        add_genconstrIndicator!(m.inner, binvar, binval, varidx, coef, '>', lb)
+    elseif lb == ub
+        # == constraint
+        add_genconstrIndicator!(m.inner, binvar, binval, varidx, coef, '=', lb)
     else
         # Range constraint
         error("Adding range constraints not supported yet.")
