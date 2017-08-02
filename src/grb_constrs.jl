@@ -82,6 +82,31 @@ function add_constrs!(model::Model, A::CoeffMat, rel::GCharOrVec, b::Vector{Floa
 end
 
 
+# add single indicator constraint
+add_genconstrIndicator!(model::Model, binvar, binval, inds, coeffs, sense, rhs) =
+    add_genconstrIndicator!(model, convert(Cint,binvar), convert(Cint,binval), convert(Vector{Cint},inds), convert(Vector{Cdouble},coeffs),
+                             convert(Cchar,sense), convert(Cdouble,rhs))
+function add_genconstrIndicator!(model::Model, binvar::Cint, binval::Cint, inds::IVec, coeffs::FVec, sense::Cchar, rhs::Float64)
+    length(inds) == length(coeffs) || error("Inconsistent argument dimensions.")
+    ret = @grb_ccall(addgenconstrIndicator, Cint, (
+        Ptr{Void},    # model
+        Ptr{UInt8},   # name
+        Cint,         # binvar
+        Cint,         # binval
+        Cint,         # nvars
+        Ptr{Cint},    # cind
+        Ptr{Float64}, # cvals
+        Cchar,        # sense
+        Float64       # rhs
+        ),
+        model, C_NULL, binvar-1, binval, length(inds), inds - 1, coeffs, sense, rhs)
+    if ret != 0
+        throw(GurobiError(model.env, ret))
+    end
+    nothing
+end
+
+
 # add single range constraint
 
 function add_rangeconstr!(model::Model, inds::IVec, coeffs::FVec, lb::Float64, ub::Float64)

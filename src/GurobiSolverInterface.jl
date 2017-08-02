@@ -276,6 +276,26 @@ delconstrs!(m::GurobiMathProgModel, idx) = del_constrs!(m.inner, idx)
 
 changecoeffs!(m::GurobiMathProgModel, cidx, vidx, val) = chg_coeffs!(m.inner, cidx, vidx, val)
 
+function addindconstr!(m::GurobiMathProgModel, binvar, binval, varidx, coef, lb, ub)
+    if m.last_op_type == :Var
+        updatemodel!(m)
+        m.last_op_type = :Con
+    end
+    if lb == -Inf
+        # <= constraint
+        add_genconstrIndicator!(m.inner, binvar, binval, varidx, coef, '<', ub)
+    elseif ub == +Inf
+        # >= constraint
+        add_genconstrIndicator!(m.inner, binvar, binval, varidx, coef, '>', lb)
+    elseif lb == ub
+        # == constraint
+        add_genconstrIndicator!(m.inner, binvar, binval, varidx, coef, '=', lb)
+    else
+        # Range constraint
+        error("Adding range constraints not supported yet.")
+    end
+end
+
 function updatemodel!(m::GurobiMathProgModel)
     update_model!(m.inner)
     if Gurobi.version < v"7.0" && m.obj != getobj(m)

@@ -170,6 +170,10 @@ add_rangeconstrs!(model, A, lb, ub)  # here A can be dense or sparse
 # add range constraints using a transposed matrix: lb <= At' x <= ub
 # this is usually more efficient than add_rangeconstrs!
 add_rangeconstrs_t!(model, At, lb, ub)  # here At can be dense or sparse
+
+# add an indicator constraint: y = 1 -> ax <= ub
+# where y is a binary variable. Available since Gurobi 7.0
+add_genconstrIndicator!(model, binvar, binval, inds, coeffs, rel, rhs)  
 ```
 
 #### Modify Problem
